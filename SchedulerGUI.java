@@ -42,8 +42,33 @@ public class SchedulerGUI extends JFrame {
         algoPanel.add(algorithmBox);
 
         JPanel quantumPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        quantumPanel.add(new JLabel("Quantum:"));
+        quantumPanel.add(new JLabel("Quantum (For RR):"));
         quantumPanel.add(timeQuantumField);
+
+        JPanel mlfqQ0Panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        mlfqQ0Panel.add(new JLabel("Q0 (For MLFQ):"));
+        JTextField mlfqQ0Field = new JTextField(10);
+        mlfqQ0Panel.add(mlfqQ0Field); 
+
+        JPanel mlfqQ1Panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        mlfqQ1Panel.add(new JLabel("Q1 (For MLFQ):"));
+        JTextField mlfqQ1Field = new JTextField(10);
+        mlfqQ1Panel.add(mlfqQ1Field);
+
+        JPanel mlfqQ2Panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        mlfqQ2Panel.add(new JLabel("Q2 (For MLFQ):"));
+        JTextField mlfqQ2Field = new JTextField(10);
+        mlfqQ2Panel.add(mlfqQ2Field);
+
+        JPanel mlfqQ3Panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        mlfqQ3Panel.add(new JLabel("Q3 (For MLFQ):"));
+        JTextField mlfqQ3Field = new JTextField(10);
+        mlfqQ3Panel.add(mlfqQ3Field);
+
+        JPanel mlfqBoostPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        mlfqBoostPanel.add(new JLabel("Boost Interval (For MLFQ):"));
+        JTextField mlfqBoostField = new JTextField(5);
+        mlfqBoostPanel.add(mlfqBoostField);
 
         JTextField numPIDsField = new JTextField(4); 
 
@@ -81,6 +106,11 @@ public class SchedulerGUI extends JFrame {
         controlsPanel.add(algoPanel);
         controlsPanel.add(numPIDsPanel);
         controlsPanel.add(quantumPanel);
+        controlsPanel.add(mlfqQ0Panel);
+        controlsPanel.add(mlfqQ1Panel);
+        controlsPanel.add(mlfqQ2Panel);
+        controlsPanel.add(mlfqQ3Panel);
+        controlsPanel.add(mlfqBoostPanel);
 
         JPanel runPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         Dimension combinedSize = new Dimension(
@@ -196,6 +226,12 @@ public class SchedulerGUI extends JFrame {
                 case "SJF":
                     result = scheduler.runSJF();
                     break;
+                case "SRTF":
+                    result = scheduler.runSRTF();
+                    break;
+                case "MLFQ":
+                    result = scheduler.runMLFQ(quanta, boostInterval);
+                    break;  
                 default:
                     result = "Algorithm \"" + algo + "\" not implemented yet.";
                     blocks = new ArrayList<>();
