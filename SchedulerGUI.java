@@ -52,27 +52,27 @@ public class SchedulerGUI extends JFrame {
 
         JPanel mlfqQ0Panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         mlfqQ0Panel.add(new JLabel("Q0 (For MLFQ):"));
-        JTextField mlfqQ0Field = new JTextField(10);
+        mlfqQ0Field = new JTextField(10);
         mlfqQ0Panel.add(mlfqQ0Field); 
 
         JPanel mlfqQ1Panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         mlfqQ1Panel.add(new JLabel("Q1 (For MLFQ):"));
-        JTextField mlfqQ1Field = new JTextField(10);
+        mlfqQ1Field = new JTextField(10);
         mlfqQ1Panel.add(mlfqQ1Field);
 
         JPanel mlfqQ2Panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         mlfqQ2Panel.add(new JLabel("Q2 (For MLFQ):"));
-        JTextField mlfqQ2Field = new JTextField(10);
+        mlfqQ2Field = new JTextField(10);
         mlfqQ2Panel.add(mlfqQ2Field);
 
         JPanel mlfqQ3Panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         mlfqQ3Panel.add(new JLabel("Q3 (For MLFQ):"));
-        JTextField mlfqQ3Field = new JTextField(10);
+        mlfqQ3Field = new JTextField(10);
         mlfqQ3Panel.add(mlfqQ3Field);
 
         JPanel mlfqBoostPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         mlfqBoostPanel.add(new JLabel("Boost Interval (For MLFQ):"));
-        JTextField mlfqBoostField = new JTextField(5);
+        mlfqBoostField = new JTextField(5);
         mlfqBoostPanel.add(mlfqBoostField);
 
         JTextField numPIDsField = new JTextField(4); 
@@ -136,7 +136,12 @@ public class SchedulerGUI extends JFrame {
             ganttChartPanel.setBlocks(new ArrayList<>()); 
             timeQuantumField.setText("");              
             numPIDsField.setText("");                  
-            algorithmBox.setSelectedIndex(0);          
+            algorithmBox.setSelectedIndex(0);
+            mlfqQ0Field.setText("");
+            mlfqQ1Field.setText("");
+            mlfqQ2Field.setText("");
+            mlfqQ3Field.setText("");
+            mlfqBoostField.setText("");
         });
 
         leftPanel.add(controlsPanel);
@@ -208,7 +213,7 @@ public class SchedulerGUI extends JFrame {
             String algo = algorithmBox.getSelectedItem().toString();
             int quantum = 1;
 
-            if (algo.equals("Round Robin") || algo.equals("MLFQ")) {
+            if (algo.equals("Round Robin")) {
                 String qt = timeQuantumField.getText().trim();
                 if (qt.isEmpty()) throw new Exception("Quantum is required.");
                 quantum = Integer.parseInt(qt);
