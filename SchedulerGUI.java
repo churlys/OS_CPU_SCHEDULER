@@ -1,0 +1,269 @@
+import java.awt.*;
+import java.util.*;
+import java.util.List;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
+public class SchedulerGUI extends JFrame {
+    private JTable table;
+    private JTextArea outputArea;
+    private JComboBox<String> algorithmBox;
+    private JTextField timeQuantumField;
+    private DefaultTableModel tableModel;
+    private GanttChartPanel ganttChartPanel;
+
+    public SchedulerGUI() {
+        setTitle("CPU Scheduling Simulator");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(800, 600);
+        setLocationRelativeTo(null);
+
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        add(panel);
+        
+        algorithmBox = new JComboBox<>(new String[]{
+            "FIFO", "SJF", "SRTF", "Round Robin", "MLFQ"
+        });
+
+        timeQuantumField = new JTextField(5);
+        JButton addRowButton = new JButton("Add Process");
+        JButton randomButton = new JButton("Generate Random");
+        JButton runButton = new JButton("Run Simulation");
+        
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
+        
+        JPanel controlsPanel = new JPanel();
+        controlsPanel.setLayout(new BoxLayout(controlsPanel, BoxLayout.Y_AXIS));
+
+        JPanel algoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        algoPanel.add(new JLabel("Algorithm:"));
+        algoPanel.add(algorithmBox);
+
+        JPanel quantumPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        quantumPanel.add(new JLabel("Quantum:"));
+        quantumPanel.add(timeQuantumField);
+
+        JTextField numPIDsField = new JTextField(4); 
+
+        JPanel numPIDsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        numPIDsPanel.add(new JLabel("No. of PIDs:"));
+        numPIDsPanel.add(numPIDsField);
+
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        buttonsPanel.add(addRowButton);
+        buttonsPanel.add(randomButton);
+
+        randomButton.addActionListener(e -> {
+            tableModel.setRowCount(0);
+            Random rand = new Random();
+            int n;
+            String numText = numPIDsField.getText().trim();
+            if (!numText.isEmpty()) {
+                try {
+                    n = Integer.parseInt(numText);
+                    if (n <= 0) throw new NumberFormatException();
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Please enter a valid positive number for No. of PIDs.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            } else {
+                n = 5 + rand.nextInt(5); // Default random number of PIDs
+            }
+            for (int i = 1; i <= n; i++) {
+                int arrival = rand.nextInt(5);
+                int burst = 1 + rand.nextInt(9);
+                tableModel.addRow(new Object[]{"P" + i, arrival, burst});
+            }
+        });
+
+        controlsPanel.add(algoPanel);
+        controlsPanel.add(numPIDsPanel);
+        controlsPanel.add(quantumPanel);
+
+        JPanel runPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        Dimension combinedSize = new Dimension(
+        addRowButton.getPreferredSize().width + randomButton.getPreferredSize().width + 5, // 8 for spacing
+        runButton.getPreferredSize().height
+        );
+        runButton.setPreferredSize(combinedSize);
+        runPanel.add(runButton);
+        
+        JPanel clearPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton clearButton = new JButton("Clear");
+        clearButton.setPreferredSize(runButton.getPreferredSize());
+        clearPanel.add(clearButton);
+
+        clearButton.addActionListener(e -> {
+            tableModel.setRowCount(0);                 
+            outputArea.setText("");                    
+            ganttChartPanel.setBlocks(new ArrayList<>()); 
+            timeQuantumField.setText("");              
+            numPIDsField.setText("");                  
+            algorithmBox.setSelectedIndex(0);          
+        });
+
+        topPanel.add(controlsPanel);
+        topPanel.add(Box.createVerticalStrut(18)); // optional spacing
+        topPanel.add(buttonsPanel);
+        topPanel.add(runPanel);
+        topPanel.add(clearPanel);
+        panel.add(topPanel, BorderLayout.NORTH);
+
+        tableModel = new DefaultTableModel(new String[]{"PID", "Arrival Time", "Burst Time"}, 0);
+        table = new JTable(tableModel);
+        JScrollPane tableScroll = new JScrollPane(table);
+        panel.add(tableScroll, BorderLayout.CENTER);
+
+        outputArea = new JTextArea(10, 70);
+        outputArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        outputArea.setEditable(false);
+        JScrollPane outputScroll = new JScrollPane(outputArea);
+        ganttChartPanel = new GanttChartPanel();
+        ganttChartPanel.setPreferredSize(new Dimension(800, 120));
+        panel.add(ganttChartPanel, BorderLayout.AFTER_LAST_LINE);
+        panel.add(outputScroll, BorderLayout.SOUTH);
+
+        addRowButton.addActionListener(e -> {
+            int pid = tableModel.getRowCount() + 1;
+            tableModel.addRow(new Object[]{"P" + pid, 0, 0});
+        });
+
+        randomButton.addActionListener(e -> {
+            tableModel.setRowCount(0);
+            Random rand = new Random();
+            int n = 5 + rand.nextInt(5);
+            for (int i = 1; i <= n; i++) {
+                int arrival = rand.nextInt(5);
+                int burst = 1 + rand.nextInt(9);
+                tableModel.addRow(new Object[]{"P" + i, arrival, burst});
+            }
+        });
+
+        runButton.addActionListener(e -> runSimulation());
+    }
+
+    private void runSimulation() {
+        List<Process> processes = new ArrayList<>();
+
+        try {
+            for (int i = 0; i < tableModel.getRowCount(); i++) {
+                String pid = tableModel.getValueAt(i, 0).toString();
+                int arrival = Integer.parseInt(tableModel.getValueAt(i, 1).toString());
+                int burst = Integer.parseInt(tableModel.getValueAt(i, 2).toString());
+                processes.add(new Process(pid, arrival, burst));
+            }
+
+            String algo = algorithmBox.getSelectedItem().toString();
+            int quantum = 1;
+
+            if (algo.equals("Round Robin") || algo.equals("MLFQ")) {
+                String qt = timeQuantumField.getText().trim();
+                if (qt.isEmpty()) throw new Exception("Quantum is required.");
+                quantum = Integer.parseInt(qt);
+                if (quantum <= 0) throw new Exception("Quantum must be > 0");
+            }
+
+            Scheduler scheduler = new Scheduler(processes);
+            String result = "";
+            
+            List<GanttChartPanel.GanttBlock> blocks = new ArrayList<>();
+            Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.ORANGE, Color.MAGENTA, Color.CYAN};
+
+            switch (algo) {
+                case "FIFO":
+                    result = scheduler.runFIFO();
+                    blocks = scheduler.getGanttBlocks(colors); // get blocks for FIFO
+                    break;
+                case "Round Robin":
+                    result = scheduler.runRR(quantum);
+                    blocks = scheduler.getGanttBlocks(colors); // get blocks for RR
+                    break;
+                case "SJF":
+                    result = scheduler.runSJF();
+                    blocks = scheduler.getGanttBlocks(colors); // get blocks for SJF
+                    break;
+                default:
+                    result = "Algorithm \"" + algo + "\" not implemented yet.";
+                    blocks = new ArrayList<>();
+                    break;
+            }
+
+            outputArea.setText(result);
+            ganttChartPanel.setBlocks(blocks);
+
+            outputArea.setText(result);
+            List<GanttChartPanel.GanttBlock> blocks = new ArrayList<>();
+            Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.ORANGE, Color.MAGENTA, Color.CYAN};
+            int currentTime = 0;
+            int colorIndex = 0;
+
+            for (Process p : processes) {
+                int start = currentTime;
+                int end = currentTime + p.burstTime;
+                blocks.add(new GanttChartPanel.GanttBlock(p.pid, start, end, colors[colorIndex % colors.length]));
+                currentTime = end;
+                colorIndex++;
+            }
+
+            ganttChartPanel.setBlocks(blocks);
+
+    } catch (Exception ex) {
+        JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
+     
+    
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new SchedulerGUI().setVisible(true));
+    }
+}
+class GanttChartPanel extends JPanel {
+    private List<GanttBlock> blocks = new ArrayList<>();
+
+    public void setBlocks(List<GanttBlock> blocks) {
+        this.blocks = blocks;
+        repaint();
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (blocks == null || blocks.isEmpty()) return;
+
+        Graphics2D g2 = (Graphics2D) g;
+        int height = 50;
+        int xStart = 50;
+        int y = 40;
+        int unitWidth = 30;
+
+        for (GanttBlock block : blocks) {
+            int width = (block.end - block.start) * unitWidth;
+            g2.setColor(block.color);
+            g2.fillRect(xStart, y, width, height);
+
+            g2.setColor(Color.BLACK);
+            g2.drawRect(xStart, y, width, height);
+            g2.drawString(block.pid, xStart + width / 2 - 10, y + 30);
+            g2.drawString(String.valueOf(block.start), xStart, y + 70);
+
+            xStart += width;
+        }
+        // Draw the final time
+        g2.drawString(String.valueOf(blocks.get(blocks.size() - 1).end), xStart, y + 70);
+    }
+
+    static class GanttBlock {
+        String pid;
+        int start, end;
+        Color color;
+
+        public GanttBlock(String pid, int start, int end, Color color) {
+            this.pid = pid;
+            this.start = start;
+            this.end = end;
+            this.color = color;
+        }
+    }
+}
