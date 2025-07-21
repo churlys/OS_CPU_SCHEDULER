@@ -250,7 +250,21 @@ public class Scheduler {
         sb.append("=== Multilevel Feedback Queue (MLFQ) Scheduling ===\n");
         sb.append(String.format("%-5s %-10s %-10s %-15s %-15s\n", "PID", "Arrival", "Burst", "Waiting", "Turnaround"));
 
+        int nextBoost = boostInterval;
+
         while (completed < processes.size()) {
+
+            if (boostInterval > 0 && currentTime >= nextBoost) {
+                for (int i = 1; i < queues.size(); i++) {
+                    while (!queues.get(i).isEmpty()) {
+                        Process p = queues.get(i).poll();
+                        queues.get(0).add(p);
+                        levelMap.put(p, 0);
+                    }
+                }
+                nextBoost += boostInterval;
+            }
+
             while (index < arrivalList.size() && arrivalList.get(index).arrivalTime <= currentTime) {
                 Process p = arrivalList.get(index);
                 queues.get(0).add(p);
@@ -264,10 +278,12 @@ public class Scheduler {
                     Process p = queues.get(i).poll();
                     int q = quanta[i];
                     int exec = Math.min(p.remainingTime, q);
+                    int startTime = currentTime;
+                    int endTime = startTime + exec;
 
                     ganttBlocks.add(new GanttChartPanel.GanttBlock(p.pid, currentTime, currentTime + exec, getColorForPID(p.pid)));
                     p.remainingTime -= exec;
-                    currentTime += exec;
+                    currentTime = endTime;
 
                     while (index < arrivalList.size() && arrivalList.get(index).arrivalTime <= currentTime) {
                         Process newP = arrivalList.get(index);
@@ -301,6 +317,6 @@ public class Scheduler {
         sb.append(String.format("\nAverage Waiting Time: %.2f\n", totalWaiting / n));
         sb.append(String.format("Average Turnaround Time: %.2f\n", totalTurnaround / n));
         return sb.toString();
-
+        
     }
 }
