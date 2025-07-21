@@ -18,8 +18,9 @@ public class SchedulerGUI extends JFrame {
         setSize(800, 600);
         setLocationRelativeTo(null);
 
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        add(panel);
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        setContentPane(mainPanel);
         
         algorithmBox = new JComboBox<>(new String[]{
             "FIFO", "SJF", "SRTF", "Round Robin", "MLFQ"
@@ -30,8 +31,8 @@ public class SchedulerGUI extends JFrame {
         JButton randomButton = new JButton("Generate Random");
         JButton runButton = new JButton("Run Simulation");
         
-        JPanel topPanel = new JPanel();
-        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
+        JPanel leftPanel = new JPanel();
+        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         
         JPanel controlsPanel = new JPanel();
         controlsPanel.setLayout(new BoxLayout(controlsPanel, BoxLayout.Y_AXIS));
@@ -103,26 +104,39 @@ public class SchedulerGUI extends JFrame {
             algorithmBox.setSelectedIndex(0);          
         });
 
-        topPanel.add(controlsPanel);
-        topPanel.add(Box.createVerticalStrut(18)); // optional spacing
-        topPanel.add(buttonsPanel);
-        topPanel.add(runPanel);
-        topPanel.add(clearPanel);
-        panel.add(topPanel, BorderLayout.NORTH);
+        leftPanel.add(controlsPanel);
+        leftPanel.add(Box.createVerticalStrut(18)); // optional spacing
+        leftPanel.add(buttonsPanel);
+        leftPanel.add(runPanel);
+        leftPanel.add(clearPanel);
 
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setPreferredSize(new Dimension(500, leftPanel.getPreferredSize().height));
         tableModel = new DefaultTableModel(new String[]{"PID", "Arrival Time", "Burst Time"}, 0);
         table = new JTable(tableModel);
         JScrollPane tableScroll = new JScrollPane(table);
-        panel.add(tableScroll, BorderLayout.CENTER);
+        tablePanel.add(tableScroll, BorderLayout.CENTER);
+
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
+        topPanel.add(leftPanel);
+        topPanel.add(Box.createHorizontalStrut(20)); // optional spacing
+        topPanel.add(tablePanel);
 
         outputArea = new JTextArea(10, 70);
         outputArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         outputArea.setEditable(false);
         JScrollPane outputScroll = new JScrollPane(outputArea);
+        
         ganttChartPanel = new GanttChartPanel();
         ganttChartPanel.setPreferredSize(new Dimension(800, 120));
-        panel.add(ganttChartPanel, BorderLayout.AFTER_LAST_LINE);
-        panel.add(outputScroll, BorderLayout.SOUTH);
+
+        mainPanel.add(topPanel);          // controls + table side-by-side
+        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(outputScroll);      // output area below
+        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(ganttChartPanel);
+        
 
         addRowButton.addActionListener(e -> {
             int pid = tableModel.getRowCount() + 1;
@@ -173,15 +187,12 @@ public class SchedulerGUI extends JFrame {
             switch (algo) {
                 case "FIFO":
                     result = scheduler.runFIFO();
-                    blocks = scheduler.getGanttBlocks(colors); // get blocks for FIFO
                     break;
                 case "Round Robin":
                     result = scheduler.runRR(quantum);
-                    blocks = scheduler.getGanttBlocks(colors); // get blocks for RR
                     break;
                 case "SJF":
                     result = scheduler.runSJF();
-                    blocks = scheduler.getGanttBlocks(colors); // get blocks for SJF
                     break;
                 default:
                     result = "Algorithm \"" + algo + "\" not implemented yet.";
@@ -193,8 +204,6 @@ public class SchedulerGUI extends JFrame {
             ganttChartPanel.setBlocks(blocks);
 
             outputArea.setText(result);
-            List<GanttChartPanel.GanttBlock> blocks = new ArrayList<>();
-            Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.ORANGE, Color.MAGENTA, Color.CYAN};
             int currentTime = 0;
             int colorIndex = 0;
 
