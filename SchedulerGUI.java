@@ -130,12 +130,14 @@ public class SchedulerGUI extends JFrame {
         
         ganttChartPanel = new GanttChartPanel();
         ganttChartPanel.setPreferredSize(new Dimension(800, 120));
+        
+        // UI IS DONEEEE (So far)
 
-        mainPanel.add(topPanel);          // controls + table side-by-side
+        mainPanel.add(topPanel);          
         mainPanel.add(Box.createVerticalStrut(10));
-        mainPanel.add(outputScroll);      // output area below
+        mainPanel.add(outputScroll);      
         mainPanel.add(Box.createVerticalStrut(10));
-        mainPanel.add(ganttChartPanel);
+        mainPanel.add(ganttChartPanel); 
         
 
         addRowButton.addActionListener(e -> {
