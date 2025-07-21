@@ -11,6 +11,11 @@ public class SchedulerGUI extends JFrame {
     private JTextField timeQuantumField;
     private DefaultTableModel tableModel;
     private GanttChartPanel ganttChartPanel;
+    private JTextField mlfqQ0Field;
+    private JTextField mlfqQ1Field;
+    private JTextField mlfqQ2Field;
+    private JTextField mlfqQ3Field;
+    private JTextField mlfqBoostField;
 
     public SchedulerGUI() {
         setTitle("CPU Scheduling Simulator");
@@ -230,7 +235,19 @@ public class SchedulerGUI extends JFrame {
                     result = scheduler.runSRTF();
                     break;
                 case "MLFQ":
-                    result = scheduler.runMLFQ(quanta, boostInterval);
+                    try {
+                        int[] quanta = new int[4];
+                        quanta[0] = Integer.parseInt(mlfqQ0Field.getText().trim());
+                        quanta[1] = Integer.parseInt(mlfqQ1Field.getText().trim());
+                        quanta[2] = Integer.parseInt(mlfqQ2Field.getText().trim());
+                        quanta[3] = Integer.parseInt(mlfqQ3Field.getText().trim());
+
+                        int boostInterval = Integer.parseInt(mlfqBoostField.getText().trim());
+
+                        result = scheduler.runMLFQ(quanta, boostInterval);
+                    } catch (NumberFormatException ex) {
+                        throw new Exception("Please enter valid integer values for all MLFQ quanta and boost interval.");
+                    }
                     break;  
                 default:
                     result = "Algorithm \"" + algo + "\" not implemented yet.";
