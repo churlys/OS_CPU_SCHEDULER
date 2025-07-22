@@ -17,26 +17,33 @@ public class SchedulerGUI extends JFrame {
     private JTextField mlfqQ3Field;
     private JTextField mlfqBoostField;
 
+    private final Color backgroundDark = new Color(30, 30, 30);
+
     public SchedulerGUI() {
-        setTitle("CPU Scheduling Simulator");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(800, 600);
-        setLocationRelativeTo(null);
 
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         setContentPane(mainPanel);
+
+        JLabel titleLabel = new JLabel("CPU Scheduling Simulator");
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+        titleLabel.setForeground(Color.GREEN);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         algorithmBox = new JComboBox<>(new String[]{
             "FIFO", "SJF", "SRTF", "Round Robin", "MLFQ"
         });
 
         timeQuantumField = new JTextField(5);
-        JButton addRowButton = new JButton("Add Process");
-        JButton randomButton = new JButton("Generate Random");
-        JButton runButton = new JButton("Run Simulation");
+        RoundedButton addRowButton = new RoundedButton("Add Process", 20);
+        RoundedButton randomButton = new RoundedButton("Generate Random", 20);
+        RoundedButton runButton = new RoundedButton("Run Simulation", 20);
+
+        styleButton(addRowButton);
+        styleButton(randomButton);
+        styleButton(runButton);
         
-        JPanel leftPanel = new JPanel();
+        RoundedPanel leftPanel = new RoundedPanel(50);
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         
         JPanel controlsPanel = new JPanel();
@@ -117,6 +124,15 @@ public class SchedulerGUI extends JFrame {
         controlsPanel.add(mlfqQ3Panel);
         controlsPanel.add(mlfqBoostPanel);
 
+        algoPanel.setBackground(new Color(169, 169, 169));
+        numPIDsPanel.setBackground(new Color(169, 169, 169));
+        quantumPanel.setBackground(new Color(169, 169, 169));
+        mlfqQ0Panel.setBackground(new Color(169, 169, 169));
+        mlfqQ1Panel.setBackground(new Color(169, 169, 169));
+        mlfqQ2Panel.setBackground(new Color(169, 169, 169));
+        mlfqQ3Panel.setBackground(new Color(169, 169, 169));
+        mlfqBoostPanel.setBackground(new Color(169, 169, 169));
+
         JPanel runPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         Dimension combinedSize = new Dimension(
         addRowButton.getPreferredSize().width + randomButton.getPreferredSize().width + 5, // 8 for spacing
@@ -126,7 +142,8 @@ public class SchedulerGUI extends JFrame {
         runPanel.add(runButton);
         
         JPanel clearPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton clearButton = new JButton("Clear");
+        RoundedButton clearButton = new RoundedButton("Clear", 20);
+        styleButton(clearButton);
         clearButton.setPreferredSize(runButton.getPreferredSize());
         clearPanel.add(clearButton);
 
@@ -154,13 +171,27 @@ public class SchedulerGUI extends JFrame {
         tablePanel.setPreferredSize(new Dimension(500, leftPanel.getPreferredSize().height));
         tableModel = new DefaultTableModel(new String[]{"PID", "Arrival Time", "Burst Time"}, 0);
         table = new JTable(tableModel);
+
+        table.setFillsViewportHeight(true);
+        table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 14));
+        table.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        table.setRowHeight(22);
+        table.getTableHeader().setBackground(Color.LIGHT_GRAY);
+        table.getTableHeader().setReorderingAllowed(false);
+        table.setSelectionBackground(new Color(0xBBDEFB)); 
+        table.setSelectionForeground(Color.BLACK);
+
         JScrollPane tableScroll = new JScrollPane(table);
         tablePanel.add(tableScroll, BorderLayout.CENTER);
 
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
+
+        leftPanel.setAlignmentY(Component.TOP_ALIGNMENT);
+        tablePanel.setAlignmentY(Component.TOP_ALIGNMENT);
+
         topPanel.add(leftPanel);
-        topPanel.add(Box.createHorizontalStrut(20)); // optional spacing
+        topPanel.add(Box.createHorizontalStrut(40)); // optional spacing
         topPanel.add(tablePanel);
 
         outputArea = new JTextArea(10, 70);
@@ -173,13 +204,33 @@ public class SchedulerGUI extends JFrame {
         
         // UI IS DONEEEE (So far)
 
+        JLabel title = new JLabel("CPU Scheduling Simulator");
+        title.setFont(new Font("SansSerif", Font.BOLD, 20));
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(titleLabel);
+        mainPanel.add(Box.createVerticalStrut(10));
+
+        mainPanel.setBackground(backgroundDark);
+        topPanel.setBackground(backgroundDark);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(1, 20, 10, 20));
+        controlsPanel.setBackground(new Color(169, 169, 169));
+        leftPanel.setBackground(new Color(169, 169, 169));
+        buttonsPanel.setBackground(new Color(169, 169, 169));
+        runPanel.setBackground(new Color(169, 169, 169));
+        clearPanel.setBackground(new Color(169, 169, 169));
+        runButton.setBackground(new Color(0x4CAF50)); // Green color
+        clearButton.setBackground(new Color(0xF44336)); // Red color
+        tablePanel.setBackground(Color.WHITE);
+        outputArea.setBackground(Color.WHITE);
+        outputArea.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
+
         mainPanel.add(topPanel);          
         mainPanel.add(Box.createVerticalStrut(10));
         mainPanel.add(outputScroll);      
         mainPanel.add(Box.createVerticalStrut(10));
         mainPanel.add(ganttChartPanel); 
         
-
         addRowButton.addActionListener(e -> {
             int pid = tableModel.getRowCount() + 1;
             tableModel.addRow(new Object[]{"P" + pid, 0, 0});
@@ -199,6 +250,73 @@ public class SchedulerGUI extends JFrame {
         runButton.addActionListener(e -> runSimulation());
     }
 
+    private void styleButton(JButton button) {
+    button.setBackground(new Color(0x2196F3)); // Blue color
+    button.setForeground(Color.WHITE);         // White text
+    button.setFocusPainted(false);             // Removes border highlight
+    button.setCursor(new Cursor(Cursor.HAND_CURSOR)); // Changes mouse cursor to hand
+}
+
+public class RoundedButton extends JButton {
+    private int radius;
+
+    public RoundedButton(String text, int radius) {
+        super(text);
+        this.radius = radius;
+        setContentAreaFilled(false);
+        setFocusPainted(false);
+        setBorderPainted(false);
+        setForeground(Color.WHITE); // or any text color
+        setBackground(new Color(118, 185, 0)); // NVIDIA green (customize this!)
+        setFont(new Font("Segoe UI", Font.BOLD, 13));
+        setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Background
+        g2.setColor(getBackground());
+        g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
+
+        // Text
+        super.paintComponent(g2);
+        g2.dispose();
+    }
+
+    @Override
+    public void paintBorder(Graphics g) {
+        // No border by default; add if needed
+    }
+
+    @Override
+    public boolean isContentAreaFilled() {
+        return false; // custom paint handles fill
+    }
+}
+
+    public class RoundedPanel extends JPanel {
+    private int cornerRadius;
+
+    public RoundedPanel(int radius) {
+        this.cornerRadius = radius;
+        setOpaque(false); // make sure background is transparent so we can paint it ourselves
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Dimension arcs = new Dimension(cornerRadius, cornerRadius);
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // draw rounded rectangle background
+        g2.setColor(getBackground());
+        g2.fillRoundRect(0, 0, getWidth(), getHeight(), arcs.width, arcs.height);
+    }
+}
     private void runSimulation() {
         List<Process> processes = new ArrayList<>();
 
