@@ -1,12 +1,12 @@
-import java.awt.Color;
-import java.util.*;
-public class Scheduler {
-    private List<Process> processes;
-    private List<GanttChartPanel.GanttBlock> ganttBlocks = new ArrayList<>();
+    import java.util.*;
+    import java.awt.Color;
+    public class Scheduler {
+        private List<Process> processes;
+        private List<GanttChartPanel.GanttBlock> ganttBlocks = new ArrayList<>();
 
-    public List<GanttChartPanel.GanttBlock> getRawGanttBlocks() {
-        return ganttBlocks;
-    }
+        public List<GanttChartPanel.GanttBlock> getRawGanttBlocks() {
+            return ganttBlocks;
+        }
 
     public Scheduler(List<Process> processes) {
         this.processes = new ArrayList<>();
@@ -180,7 +180,8 @@ public class Scheduler {
         sb.append(String.format("Average Turnaround Time: %.2f\n", totalTurnaround / n));
         return sb.toString();
     }
-    public String runSRTF() {
+
+        public String runSRTF() {
         StringBuilder sb = new StringBuilder();
         ganttBlocks.clear();
         List<Process> all = new ArrayList<>(processes);
@@ -229,94 +230,74 @@ public class Scheduler {
         sb.append(String.format("Average Turnaround Time: %.2f\n", totalTurnaround / n));
         return sb.toString();
     }    
-    
-    public String runMLFQ(int[] quanta, int boostInterval) {
-        StringBuilder sb = new StringBuilder();
-        ganttBlocks.clear();
-        List<Queue<Process>> queues = new ArrayList<>();
-        for (int i = 0; i < quanta.length; i++) queues.add(new LinkedList<>());
+ public String runMLFQ(int [] quantum) {
+    StringBuilder sb = new StringBuilder();
+    ganttBlocks.clear();
+    int numQueues = 3; // or any number you want
+    List<Queue<Process>> queues = new ArrayList<>();
+    for (int i = 0; i < numQueues; i++) queues.add(new LinkedList<>());
 
-        List<Process> arrivalList = new ArrayList<>(processes);
-        arrivalList.sort(Comparator.comparingInt(p -> p.arrivalTime));
+    List<Process> arrivalList = new ArrayList<>(processes);
+    arrivalList.sort(Comparator.comparingInt(p -> p.arrivalTime));
 
-        int currentTime = 0;
-        int index = 0;
-        double totalWaiting = 0, totalTurnaround = 0;
-        int completed = 0;
-        Map<String, Integer> turnaroundMap = new HashMap<>();
-        Map<String, Integer> waitingMap = new HashMap<>();
-        Map<Process, Integer> levelMap = new HashMap<>();
+    int currentTime = 0;
+    int index = 0;
+    double totalWaiting = 0, totalTurnaround = 0;
+    int completed = 0;
+    Map<Process, Integer> levelMap = new HashMap<>();
 
-        sb.append("=== Multilevel Feedback Queue (MLFQ) Scheduling ===\n");
-        sb.append(String.format("%-5s %-10s %-10s %-15s %-15s\n", "PID", "Arrival", "Burst", "Waiting", "Turnaround"));
+    sb.append("=== Multilevel Feedback Queue (MLFQ) Scheduling ===\n");
+    sb.append(String.format("%-5s %-10s %-10s %-15s %-15s\n", "PID", "Arrival", "Burst", "Waiting", "Turnaround"));
 
-        int nextBoost = boostInterval;
-
-        while (completed < processes.size()) {
-
-            if (boostInterval > 0 && currentTime >= nextBoost) {
-                for (int i = 1; i < queues.size(); i++) {
-                    while (!queues.get(i).isEmpty()) {
-                        Process p = queues.get(i).poll();
-                        queues.get(0).add(p);
-                        levelMap.put(p, 0);
-                    }
-                }
-                nextBoost += boostInterval;
-            }
-
-            while (index < arrivalList.size() && arrivalList.get(index).arrivalTime <= currentTime) {
-                Process p = arrivalList.get(index);
-                queues.get(0).add(p);
-                levelMap.put(p, 0);
-                index++;
-            }
-
-            boolean executed = false;
-            for (int i = 0; i < queues.size(); i++) {
-                if (!queues.get(i).isEmpty()) {
-                    Process p = queues.get(i).poll();
-                    int q = quanta[i];
-                    int exec = Math.min(p.remainingTime, q);
-                    int startTime = currentTime;
-                    int endTime = startTime + exec;
-
-                    ganttBlocks.add(new GanttChartPanel.GanttBlock(p.pid, currentTime, currentTime + exec, getColorForPID(p.pid)));
-                    p.remainingTime -= exec;
-                    currentTime = endTime;
-
-                    while (index < arrivalList.size() && arrivalList.get(index).arrivalTime <= currentTime) {
-                        Process newP = arrivalList.get(index);
-                        queues.get(0).add(newP);
-                        levelMap.put(newP, 0);
-                        index++;
-                    }
-
-                    if (p.remainingTime > 0) {
-                        int nextLevel = Math.min(i + 1, queues.size() - 1);
-                        queues.get(nextLevel).add(p);
-                        levelMap.put(p, nextLevel);
-                    } else {
-                        int turnaround = currentTime - p.arrivalTime;
-                        int waiting = turnaround - p.burstTime;
-                        totalWaiting += waiting;
-                        totalTurnaround += turnaround;
-                        completed++;
-                        sb.append(String.format("%-5s %-10d %-10d %-15d %-15d\n", p.pid, p.arrivalTime, p.burstTime, waiting, turnaround));
-                    }
-
-                    executed = true;
-                    break;
-                }
-            }
-
-            if (!executed) currentTime++;
+    while (completed < processes.size()) {
+        while (index < arrivalList.size() && arrivalList.get(index).arrivalTime <= currentTime) {
+            Process p = arrivalList.get(index);
+            queues.get(0).add(p);
+            levelMap.put(p, 0);
+            index++;
         }
 
-        int n = processes.size();
-        sb.append(String.format("\nAverage Waiting Time: %.2f\n", totalWaiting / n));
-        sb.append(String.format("Average Turnaround Time: %.2f\n", totalTurnaround / n));
-        return sb.toString();
-        
+        boolean executed = false;
+        for (int i = 0; i < queues.size(); i++) {
+            if (!queues.get(i).isEmpty()) {
+                Process p = queues.get(i).poll();
+                int exec = Math.min(p.remainingTime, quantum);
+
+                ganttBlocks.add(new GanttChartPanel.GanttBlock(p.pid, currentTime, currentTime + exec, getColorForPID(p.pid)));
+                p.remainingTime -= exec;
+                currentTime += exec;
+
+                while (index < arrivalList.size() && arrivalList.get(index).arrivalTime <= currentTime) {
+                    Process newP = arrivalList.get(index);
+                    queues.get(0).add(newP);
+                    levelMap.put(newP, 0);
+                    index++;
+                }
+
+                if (p.remainingTime > 0) {
+                    int nextLevel = Math.min(i + 1, queues.size() - 1);
+                    queues.get(nextLevel).add(p);
+                    levelMap.put(p, nextLevel);
+                } else {
+                    int turnaround = currentTime - p.arrivalTime;
+                    int waiting = turnaround - p.burstTime;
+                    totalWaiting += waiting;
+                    totalTurnaround += turnaround;
+                    completed++;
+                    sb.append(String.format("%-5s %-10d %-10d %-15d %-15d\n", p.pid, p.arrivalTime, p.burstTime, waiting, turnaround));
+                }
+
+                executed = true;
+                break;
+            }
+        }
+
+        if (!executed) currentTime++;
     }
+
+    int n = processes.size();
+    sb.append(String.format("\nAverage Waiting Time: %.2f\n", totalWaiting / n));
+    sb.append(String.format("Average Turnaround Time: %.2f\n", totalTurnaround / n));
+    return sb.toString();
+}
 }

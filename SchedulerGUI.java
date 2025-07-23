@@ -77,11 +77,6 @@ public class SchedulerGUI extends JFrame {
         mlfqQ3Field = new JTextField(10);
         mlfqQ3Panel.add(mlfqQ3Field);
 
-        JPanel mlfqBoostPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        mlfqBoostPanel.add(new JLabel("Boost Interval (For MLFQ):"));
-        mlfqBoostField = new JTextField(5);
-        mlfqBoostPanel.add(mlfqBoostField);
-
         JTextField numPIDsField = new JTextField(4); 
 
         JPanel numPIDsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -122,7 +117,6 @@ public class SchedulerGUI extends JFrame {
         controlsPanel.add(mlfqQ1Panel);
         controlsPanel.add(mlfqQ2Panel);
         controlsPanel.add(mlfqQ3Panel);
-        controlsPanel.add(mlfqBoostPanel);
 
         algoPanel.setBackground(new Color(169, 169, 169));
         numPIDsPanel.setBackground(new Color(169, 169, 169));
@@ -131,7 +125,6 @@ public class SchedulerGUI extends JFrame {
         mlfqQ1Panel.setBackground(new Color(169, 169, 169));
         mlfqQ2Panel.setBackground(new Color(169, 169, 169));
         mlfqQ3Panel.setBackground(new Color(169, 169, 169));
-        mlfqBoostPanel.setBackground(new Color(169, 169, 169));
 
         JPanel runPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         Dimension combinedSize = new Dimension(
@@ -365,11 +358,9 @@ public class RoundedButton extends JButton {
                         quanta[2] = Integer.parseInt(mlfqQ2Field.getText().trim());
                         quanta[3] = Integer.parseInt(mlfqQ3Field.getText().trim());
 
-                        int boostInterval = Integer.parseInt(mlfqBoostField.getText().trim());
-
-                        result = scheduler.runMLFQ(quanta, boostInterval);
+                        result = scheduler.runMLFQ(quanta);
                     } catch (NumberFormatException ex) {
-                        throw new Exception("Please enter valid integer values for all MLFQ quanta and boost interval.");
+                        throw new Exception("Please enter valid integer values for all MLFQ quanta fields.");
                     }
                     break;  
                 default:
