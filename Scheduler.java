@@ -1,5 +1,5 @@
+  import java.awt.Color;
     import java.util.*;
-    import java.awt.Color;
     public class Scheduler {
         private List<Process> processes;
         private List<GanttChartPanel.GanttBlock> ganttBlocks = new ArrayList<>();

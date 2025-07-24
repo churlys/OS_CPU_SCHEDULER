@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.function.Consumer;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
@@ -15,7 +16,6 @@ public class SchedulerGUI extends JFrame {
     private JTextField mlfqQ1Field;
     private JTextField mlfqQ2Field;
     private JTextField mlfqQ3Field;
-    private JTextField mlfqBoostField;
 
     private final Color backgroundDark = new Color(30, 30, 30);
 
@@ -42,9 +42,6 @@ public class SchedulerGUI extends JFrame {
         styleButton(addRowButton);
         styleButton(randomButton);
         styleButton(runButton);
-        
-        RoundedPanel leftPanel = new RoundedPanel(50);
-        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         
         JPanel controlsPanel = new JPanel();
         controlsPanel.setLayout(new BoxLayout(controlsPanel, BoxLayout.Y_AXIS));
@@ -110,14 +107,6 @@ public class SchedulerGUI extends JFrame {
             }
         });
 
-        controlsPanel.add(algoPanel);
-        controlsPanel.add(numPIDsPanel);
-        controlsPanel.add(quantumPanel);
-        controlsPanel.add(mlfqQ0Panel);
-        controlsPanel.add(mlfqQ1Panel);
-        controlsPanel.add(mlfqQ2Panel);
-        controlsPanel.add(mlfqQ3Panel);
-
         algoPanel.setBackground(new Color(169, 169, 169));
         numPIDsPanel.setBackground(new Color(169, 169, 169));
         quantumPanel.setBackground(new Color(169, 169, 169));
@@ -151,17 +140,57 @@ public class SchedulerGUI extends JFrame {
             mlfqQ1Field.setText("");
             mlfqQ2Field.setText("");
             mlfqQ3Field.setText("");
-            mlfqBoostField.setText("");
         });
 
-        leftPanel.add(controlsPanel);
-        leftPanel.add(Box.createVerticalStrut(18)); // optional spacing
-        leftPanel.add(buttonsPanel);
-        leftPanel.add(runPanel);
-        leftPanel.add(clearPanel);
+        // Set layout for the main controls panel
+        controlsPanel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4, 6, 4, 6); // spacing between rows
+        gbc.fill = GridBagConstraints.HORIZONTAL; // do NOT stretch components
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 1.0;;
+
+        int row = 0;
+
+        // Use FlowLayout for label + text field side-by-side (compact)
+        Consumer<JPanel> setRowLayout = panel -> panel.setLayout(new FlowLayout(FlowLayout.LEFT, 8, 0));
+
+        // Set layout for all input rows (label + field)
+        setRowLayout.accept(quantumPanel);
+        setRowLayout.accept(mlfqQ0Panel);
+        setRowLayout.accept(mlfqQ1Panel);
+        setRowLayout.accept(mlfqQ2Panel);
+        setRowLayout.accept(mlfqQ3Panel);
+        setRowLayout.accept(algoPanel);
+        setRowLayout.accept(numPIDsPanel);
+
+        // Button panels: also keep buttons side-by-side
+        buttonsPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        runPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        clearPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 0));
+
+        // Add sub-panels to controlsPanel row by row
+        gbc.gridy = row++; controlsPanel.add(algoPanel, gbc);
+        gbc.gridy = row++; controlsPanel.add(numPIDsPanel, gbc);
+        gbc.gridy = row++; controlsPanel.add(quantumPanel, gbc);
+        gbc.gridy = row++; controlsPanel.add(mlfqQ0Panel, gbc);
+        gbc.gridy = row++; controlsPanel.add(mlfqQ1Panel, gbc);
+        gbc.gridy = row++; controlsPanel.add(mlfqQ2Panel, gbc);
+        gbc.gridy = row++; controlsPanel.add(mlfqQ3Panel, gbc);
+        gbc.gridy = row++; controlsPanel.add(buttonsPanel, gbc);
+        gbc.gridy = row++; controlsPanel.add(runPanel, gbc);
+        gbc.gridy = row++; controlsPanel.add(clearPanel, gbc);
+
+        // Optional: add vertical space filler at the bottom
+        gbc.gridy = row++;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.VERTICAL;
+        controlsPanel.add(Box.createVerticalGlue(), gbc);
+
+
 
         JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setPreferredSize(new Dimension(500, leftPanel.getPreferredSize().height));
+        tablePanel.setPreferredSize(new Dimension(1100, controlsPanel.getPreferredSize().height));
         tableModel = new DefaultTableModel(new String[]{"PID", "Arrival Time", "Burst Time"}, 0);
         table = new JTable(tableModel);
 
@@ -177,15 +206,15 @@ public class SchedulerGUI extends JFrame {
         JScrollPane tableScroll = new JScrollPane(table);
         tablePanel.add(tableScroll, BorderLayout.CENTER);
 
-        JPanel topPanel = new JPanel();
-        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 0));
 
-        leftPanel.setAlignmentY(Component.TOP_ALIGNMENT);
+        controlsPanel.setMaximumSize(controlsPanel.getPreferredSize()); // 💡 Force compact width
+        controlsPanel.setAlignmentY(Component.TOP_ALIGNMENT);
         tablePanel.setAlignmentY(Component.TOP_ALIGNMENT);
 
-        topPanel.add(leftPanel);
-        topPanel.add(Box.createHorizontalStrut(40)); // optional spacing
+        topPanel.add(controlsPanel);
         topPanel.add(tablePanel);
+
 
         outputArea = new JTextArea(10, 70);
         outputArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
@@ -208,7 +237,6 @@ public class SchedulerGUI extends JFrame {
         topPanel.setBackground(backgroundDark);
         mainPanel.setBorder(BorderFactory.createEmptyBorder(1, 20, 10, 20));
         controlsPanel.setBackground(new Color(169, 169, 169));
-        leftPanel.setBackground(new Color(169, 169, 169));
         buttonsPanel.setBackground(new Color(169, 169, 169));
         runPanel.setBackground(new Color(169, 169, 169));
         clearPanel.setBackground(new Color(169, 169, 169));
@@ -360,7 +388,7 @@ public class RoundedButton extends JButton {
 
                         result = scheduler.runMLFQ(quanta);
                     } catch (NumberFormatException ex) {
-                        throw new Exception("Please enter valid integer values for all MLFQ quanta fields.");
+                        throw new Exception("Please enter valid integer values for all MLFQ quanta and boost interval.");
                     }
                     break;  
                 default:
@@ -385,6 +413,9 @@ public class RoundedButton extends JButton {
             }
 
             ganttChartPanel.setBlocks(blocks);
+         
+        
+
 
     } catch (Exception ex) {
         JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
@@ -397,6 +428,7 @@ public class RoundedButton extends JButton {
         SwingUtilities.invokeLater(() -> new SchedulerGUI().setVisible(true));
     }
 }
+
 class GanttChartPanel extends JPanel {
     private List<GanttBlock> blocks = new ArrayList<>();
 
@@ -444,4 +476,4 @@ class GanttChartPanel extends JPanel {
             this.color = color;
         }
     }
-}
+} 
