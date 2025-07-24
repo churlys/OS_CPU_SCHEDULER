@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.lang.Process;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -206,10 +207,14 @@ public class SchedulerGUI extends JFrame {
         JScrollPane tableScroll = new JScrollPane(table);
         tablePanel.add(tableScroll, BorderLayout.CENTER);
 
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 0));
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
 
         controlsPanel.setMaximumSize(controlsPanel.getPreferredSize()); // 💡 Force compact width
         controlsPanel.setAlignmentY(Component.TOP_ALIGNMENT);
+        Dimension controlsSize = controlsPanel.getPreferredSize();
+        tablePanel.setPreferredSize(new Dimension(1100, controlsSize.height)); // Match height
+        tablePanel.setMaximumSize(new Dimension(15000, controlsSize.height)); // Match height
         tablePanel.setAlignmentY(Component.TOP_ALIGNMENT);
 
         topPanel.add(controlsPanel);
@@ -229,9 +234,9 @@ public class SchedulerGUI extends JFrame {
         JLabel title = new JLabel("CPU Scheduling Simulator");
         title.setFont(new Font("SansSerif", Font.BOLD, 20));
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
-        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(Box.createVerticalStrut(20));
         mainPanel.add(titleLabel);
-        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(Box.createVerticalStrut(20));
 
         mainPanel.setBackground(backgroundDark);
         topPanel.setBackground(backgroundDark);
@@ -247,9 +252,9 @@ public class SchedulerGUI extends JFrame {
         outputArea.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
 
         mainPanel.add(topPanel);          
-        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(Box.createVerticalStrut(20));
         mainPanel.add(outputScroll);      
-        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(Box.createVerticalStrut(20));
         mainPanel.add(ganttChartPanel); 
         
         addRowButton.addActionListener(e -> {
