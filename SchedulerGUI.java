@@ -1,5 +1,4 @@
 import java.awt.*;
-import java.lang.Process;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -344,14 +343,14 @@ public class RoundedButton extends JButton {
     }
 }
     private void runSimulation() {
-        List<Process> processes = new ArrayList<>();
-
+        List<Scheduler.Process> processes = new ArrayList<>();
+        
         try {
             for (int i = 0; i < tableModel.getRowCount(); i++) {
                 String pid = tableModel.getValueAt(i, 0).toString();
                 int arrival = Integer.parseInt(tableModel.getValueAt(i, 1).toString());
                 int burst = Integer.parseInt(tableModel.getValueAt(i, 2).toString());
-                processes.add(new Process(pid, arrival, burst));
+                processes.add(new Scheduler.Process(pid, arrival, burst));
             }
 
             String algo = algorithmBox.getSelectedItem().toString();
@@ -409,7 +408,7 @@ public class RoundedButton extends JButton {
             int currentTime = 0;
             int colorIndex = 0;
 
-            for (Process p : processes) {
+            for (Scheduler.Process p : processes) {
                 int start = currentTime;
                 int end = currentTime + p.burstTime;
                 blocks.add(new GanttChartPanel.GanttBlock(p.pid, start, end, colors[colorIndex % colors.length]));
